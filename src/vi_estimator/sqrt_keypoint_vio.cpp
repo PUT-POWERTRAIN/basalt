@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <basalt/vi_estimator/marg_helper.h>
 #include <basalt/vi_estimator/sqrt_keypoint_vio.h>
 
+#include <basalt/utils/rerun_helper.h>
+
 #include <basalt/optimization/accumulator.h>
 #include <basalt/utils/assert.h>
 #include <basalt/utils/system_utils.h>
@@ -492,7 +494,7 @@ bool SqrtKeypointVioEstimator<Scalar_>::measure(
     out_state_queue->push(data);
   }
 
-  if (out_vis_queue) {
+  if (out_vis_queue || RerunHelper::enabled()) {
     VioVisualizationData::Ptr data(new VioVisualizationData);
 
     data->t_ns = last_state_t_ns;
@@ -513,7 +515,14 @@ bool SqrtKeypointVioEstimator<Scalar_>::measure(
 
     data->opt_flow_res = prev_opt_flow_res[last_state_t_ns];
 
-    out_vis_queue->push(data);
+    if (RerunHelper::enabled()) {
+      RerunHelper::log_pose("basalt/vio_pose",
+                           getPoseStateWithLin(last_state_t_ns).getPose().template cast<double>(),
+                           last_state_t_ns);
+      RerunHelper::log_points("basalt/landmarks", data->points, last_state_t_ns);
+    }
+
+    if (out_vis_queue) out_vis_queue->push(data);
   }
 
   last_processed_t_ns = last_state_t_ns;

@@ -246,6 +246,12 @@ set(BASALT_CXX_FLAGS "${BASALT_CXX_FLAGS} -DEIGEN_DONT_PARALLELIZE")
 # Disabling them can be useful for better compile times during development.
 option(BASALT_INSTANTIATIONS_DOUBLE "Instatiate templates for Scalar=double." ON)
 option(BASALT_INSTANTIATIONS_FLOAT "Instatiate templates for Scalar=float." ON)
+option(BASALT_WITH_RERUN "Enable Rerun SDK visualization" OFF)
+
+if(BASALT_WITH_RERUN)
+  # find_package(rerun_sdk REQUIRED) # Removed as it's added as subdirectory in parent
+  list(APPEND BASALT_COMPILE_DEFINITIONS BASALT_WITH_RERUN)
+endif()
 
 if(BASALT_INSTANTIATIONS_DOUBLE)
   list(APPEND BASALT_COMPILE_DEFINITIONS BASALT_INSTANTIATIONS_DOUBLE)
@@ -394,6 +400,10 @@ target_sources(basalt
 target_link_libraries(basalt
   PUBLIC ${STD_CXX_FS} basalt::opencv basalt::basalt-headers TBB::tbb
   PRIVATE basalt::magic_enum rosbag apriltag opengv nlohmann::json fmt::fmt)
+
+if(BASALT_WITH_RERUN)
+  target_link_libraries(basalt PRIVATE rerun_sdk)
+endif()
 target_include_directories(basalt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(basalt PUBLIC ${BASALT_COMPILE_DEFINITIONS})
 #target_compile_definitions(basalt PUBLIC BASALT_DISABLE_ASSERTS)
